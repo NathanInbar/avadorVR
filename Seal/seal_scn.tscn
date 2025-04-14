@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://cux3el1lt2d15"]
+
+[ext_resource type="PackedScene" uid="uid://caiqs2hoeey2b" path="res://Seal/seal_animated.fbx" id="1_k6oyn"]
+
+[node name="Seal" type="Node3D"]
+
+[node name="seal_animated" parent="." instance=ExtResource("1_k6oyn")]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
+
+[node name="Skeleton3D" parent="seal_animated/metarig" index="0"]
+bones/0/position = Vector3(0.000159869, 0.0362586, -0.0144916)
+bones/0/rotation = Quaternion(0.00556064, 0.0428165, -0.999067, 0.000234082)
+bones/1/rotation = Quaternion(0.991899, -6.34332e-06, 4.95295e-05, 0.127032)
+bones/2/rotation = Quaternion(0.0407964, 2.04694e-09, 4.81554e-08, 0.999168)
+bones/3/rotation = Quaternion(0.0415786, 0.198647, -0.020764, 0.978969)
+bones/4/rotation = Quaternion(0.107964, 0.139668, -0.449713, 0.875554)
+bones/5/rotation = Quaternion(-0.0213094, 8.04615e-05, 0.0803893, 0.996536)
+bones/6/rotation = Quaternion(-0.0125649, -8.39844e-05, 0.0474015, 0.998797)
+bones/7/rotation = Quaternion(3.1665e-08, -8.3819e-09, -3.53903e-08, 1)
+bones/9/rotation = Quaternion(0.107964, -0.139668, 0.449713, 0.875554)
+bones/10/rotation = Quaternion(-0.0213094, -8.05213e-05, -0.0803893, 0.996536)
+bones/11/rotation = Quaternion(-0.0125649, 8.40331e-05, -0.0474015, 0.998797)
+bones/12/rotation = Quaternion(-2.56114e-09, 2.32828e-10, -1.234e-08, 1)
+bones/14/position = Vector3(2.54295e-11, 0.00650165, 9.43983e-10)
+bones/14/rotation = Quaternion(-0.0421714, -1.96644e-09, -4.21746e-06, 0.99911)
+bones/15/rotation = Quaternion(-0.0973151, -9.6337e-05, 6.90289e-06, 0.995254)
+bones/16/rotation = Quaternion(0.111921, 4.70303e-05, -5.30918e-06, 0.993717)
+bones/17/rotation = Quaternion(0.183999, -0.209009, -0.031004, 0.959947)
+bones/18/rotation = Quaternion(0.270269, -2.69217e-06, 8.3429e-07, 0.962785)
+bones/19/rotation = Quaternion(0.008851, 1.94266e-07, -4.57828e-08, 0.999961)
+bones/20/rotation = Quaternion(-5.21522e-08, 3.98586e-10, -4.96584e-10, 1)
+bones/22/rotation = Quaternion(0.00885097, -1.95581e-07, -2.2454e-09, 0.999961)
+bones/23/rotation = Quaternion(-3.72493e-08, 3.16277e-10, -3.281e-10, 1)
+bones/25/rotation = Quaternion(4.48386e-08, 0.999961, 0.008851, -1.32766e-07)
+bones/26/rotation = Quaternion(-1.82809e-10, 1, 8.17727e-09, -1.33158e-07)
+bones/27/rotation = Quaternion(-5.96183e-08, -6.39602e-10, -3.11502e-11, 1)
+bones/29/rotation = Quaternion(4.3229e-08, 1, 5.90826e-08, 1.33158e-07)
+bones/30/rotation = Quaternion(-1.00044e-11, 4.22006e-10, -4.67708e-10, 1)
+bones/32/rotation = Quaternion(0.308491, 0.0633343, -0.617824, 0.720496)
+bones/33/rotation = Quaternion(0.0149863, 0.00624398, -0.0447409, 0.998867)
+bones/34/rotation = Quaternion(-0.186256, 0.129072, -0.117604, 0.96686)
+bones/35/rotation = Quaternion(1.45519e-09, 6.8685e-09, -3.08501e-09, 1)
+bones/37/rotation = Quaternion(0.308492, -0.0633333, 0.617824, 0.720496)
+bones/38/rotation = Quaternion(0.0149863, -0.00624412, 0.0447408, 0.998867)
+bones/39/rotation = Quaternion(-0.186256, -0.129072, 0.117604, 0.96686)
+bones/40/rotation = Quaternion(-5.82143e-11, -2.3283e-10, 3.66708e-09, 1)
+
+[editable path="seal_animated"]

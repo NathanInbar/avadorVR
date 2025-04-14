@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3 uid="uid://dpo82j2xeektw"]
+
+[ext_resource type="PackedScene" uid="uid://pjfl0k8btg1h" path="res://player.tscn" id="1_f3sb7"]
+[ext_resource type="PackedScene" uid="uid://cux3el1lt2d15" path="res://Seal/seal_scn.tscn" id="2_fj7yv"]
+
+[sub_resource type="GDScript" id="GDScript_f3sb7"]
+resource_name = "world"
+script/source = "extends Node3D
+
+var interface : XRInterface
+
+func _ready() -> void:
+    interface = XRServer.find_interface(\"OpenXR\");
+    if interface and interface.is_initialized():
+            get_viewport().use_xr = true;
+            
+    enable_passthrough();
+
+func enable_passthrough() -> bool:
+    var xr_interface: XRInterface = XRServer.primary_interface
+    if xr_interface and xr_interface.is_passthrough_supported():
+        if !xr_interface.start_passthrough():
+             return false
+          
+        else:
+            var modes = xr_interface.get_supported_environment_blend_modes()
+            if xr_interface.XR_ENV_BLEND_MODE_ALPHA_BLEND in modes:
+                xr_interface.set_environment_blend_mode(xr_interface.XR_ENV_BLEND_MODE_ALPHA_BLEND)
+            else:
+                return false
+
+    get_viewport().transparent_bg = true
+    return true
+"
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_f3sb7"]
+
+[node name="world" type="Node3D"]
+script = SubResource("GDScript_f3sb7")
+
+[node name="player" parent="." instance=ExtResource("1_f3sb7")]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(20.6476, 0, 0, 0, 1, 0, 0, 0, 14.5044, -0.0672565, -1.94083, -1.50089)
+visible = false
+mesh = SubResource("PlaneMesh_f3sb7")
+
+[node name="Seal" parent="." instance=ExtResource("2_fj7yv")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.00866441, -0.737836, -3.93188)
