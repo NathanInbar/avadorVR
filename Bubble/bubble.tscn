@@ -1,12 +1,128 @@
-[gd_scene load_steps=4 format=3 uid="uid://cen2h7vv1boka"]
+[gd_scene load_steps=5 format=3 uid="uid://cen2h7vv1boka"]
 
 [ext_resource type="Material" uid="uid://bm7btug40xkp8" path="res://Bubble/bubble_mat.tres" id="1_uhdm1"]
+
+[sub_resource type="GDScript" id="GDScript_uhdm1"]
+resource_name = "bubble"
+script/source = "extends Node3D
+
+# Inspector configurable properties
+@export var lifetime: float = 5.0  # Lifetime in seconds
+@export var speed: float = 2.0  # Movement speed
+@export var direction: Vector3 = Vector3.UP  # Default direction is upward
+@export var wobble_strength: float = 0.2  # How much the bubble wobbles side to side
+@export var wobble_speed: float = 2.0  # How fast the bubble wobbles
+@export var fade_out_time: float = 1.0  # Time to fade out before destroying
+
+# Private variables
+var _timer: Timer
+var _rng = RandomNumberGenerator.new()
+var _initial_time: float
+var _mesh_instance: MeshInstance3D
+var _wobble_offset: Vector2  # Random offset for wobble pattern
+var _fade_timer: Timer
+
+func _ready():
+    # Initialize the random number generator
+    _rng.randomize()
+    
+    # Create and configure the lifetime timer
+    _timer = Timer.new()
+    _timer.wait_time = lifetime
+    _timer.one_shot = true
+    _timer.autostart = true
+    _timer.connect(\"timeout\", Callable(self, \"_on_lifetime_ended\"))
+    add_child(_timer)
+    
+    # Create fade timer
+    _fade_timer = Timer.new()
+    _fade_timer.wait_time = fade_out_time
+    _fade_timer.one_shot = true
+    _fade_timer.autostart = false
+    _fade_timer.connect(\"timeout\", Callable(self, \"_on_fade_completed\"))
+    add_child(_fade_timer)
+    
+    # Store initial time for interpolation
+    _initial_time = Time.get_ticks_msec() / 1000.0
+    
+    # Random wobble offset
+    _wobble_offset = Vector2(_rng.randf(), _rng.randf()) * TAU
+    
+    # Find mesh instance if any (for fade effect)
+    for child in get_children():
+        if child is MeshInstance3D:
+            _mesh_instance = child
+            break
+
+func _process(delta):
+    # Move the bubble in the specified direction
+    translate(direction.normalized() * speed * delta)
+    
+    # Add some wobble to make it look more natural
+    var time = Time.get_ticks_msec() / 1000.0 - _initial_time
+    var wobble_x = sin(time * wobble_speed + _wobble_offset.x) * wobble_strength * delta
+    var wobble_z = cos(time * wobble_speed + _wobble_offset.y) * wobble_strength * delta
+    
+    # Create wobble perpendicular to the main movement direction
+    var perp1 = _get_perpendicular_vector(direction.normalized())
+    var perp2 = direction.normalized().cross(perp1)
+    
+    translate(perp1 * wobble_x + perp2 * wobble_z)
+
+func _get_perpendicular_vector(vec: Vector3) -> Vector3:
+    # Create a vector perpendicular to the given vector
+    if abs(vec.y) < abs(vec.x) and abs(vec.y) < abs(vec.z):
+        return Vector3(vec.z, 0, -vec.x).normalized()
+    else:
+        return Vector3(vec.y, -vec.x, 0).normalized()
+
+func _on_lifetime_ended():
+    # Start fading if we have a mesh instance
+    if is_instance_valid(_mesh_instance):
+        # Get the material
+        var material = _mesh_instance.get_active_material(0)
+        if material is StandardMaterial3D:
+            # Start the fade timer
+            _fade_timer.start()
+        else:
+            # No material to fade, just queue_free
+            queue_free()
+    else:
+        # No mesh instance, just queue_free
+        queue_free()
+
+func _physics_process(_delta):
+    # If we're fading out, update the opacity
+    if _fade_timer.time_left > 0 and is_instance_valid(_mesh_instance):
+        var material = _mesh_instance.get_active_material(0)
+        if material is StandardMaterial3D:
+            var progress = _fade_timer.time_left / fade_out_time
+            
+            # Clone the material if it's not already a unique material for this instance
+            if material.resource_local_to_scene == false:
+                material = material.duplicate()
+                material.resource_local_to_scene = true
+                _mesh_instance.set_surface_override_material(0, material)
+            
+            # Update transparency
+            material.flags_transparent = true
+            material.albedo_color.a = progress
+
+func _on_fade_completed():
+    # Destroy the bubble when fade is complete
+    queue_free()
+
+# Optional method to burst the bubble early
+func pop():
+    _on_lifetime_ended()
+"
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_g6fnb"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_jgtn7"]
 
 [node name="Bubble" type="Node3D"]
+script = SubResource("GDScript_uhdm1")
 
 [node name="Area3D" type="Area3D" parent="."]
 

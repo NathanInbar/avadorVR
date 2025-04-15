@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://dpo82j2xeektw"]
+[gd_scene load_steps=6 format=3 uid="uid://dpo82j2xeektw"]
 
 [ext_resource type="PackedScene" uid="uid://pjfl0k8btg1h" path="res://player.tscn" id="1_f3sb7"]
 [ext_resource type="PackedScene" uid="uid://cux3el1lt2d15" path="res://Seal/seal_scn.tscn" id="2_fj7yv"]
+[ext_resource type="PackedScene" uid="uid://da2c5oft4ofl0" path="res://Bubble/bubble_spawner.tscn" id="3_tlwt5"]
 
 [sub_resource type="GDScript" id="GDScript_f3sb7"]
 resource_name = "world"
@@ -39,6 +40,7 @@ func enable_passthrough() -> bool:
 script = SubResource("GDScript_f3sb7")
 
 [node name="player" parent="." instance=ExtResource("1_f3sb7")]
+visible = false
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(20.6476, 0, 0, 0, 1, 0, 0, 0, 14.5044, -0.0672565, -1.94083, -1.50089)
@@ -47,3 +49,9 @@ mesh = SubResource("PlaneMesh_f3sb7")
 
 [node name="Seal" parent="." instance=ExtResource("2_fj7yv")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.00866441, -0.737836, -3.93188)
+
+[node name="BubbleSpawner" parent="." instance=ExtResource("3_tlwt5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.41192)
+spawn_line_direction = Vector3(1, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="."]
