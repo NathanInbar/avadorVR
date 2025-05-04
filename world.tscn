@@ -50,8 +50,8 @@ mesh = SubResource("PlaneMesh_f3sb7")
 [node name="Seal" parent="." instance=ExtResource("2_fj7yv")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.00866441, -0.737836, -3.93188)
 
-[node name="BubbleSpawner" parent="." instance=ExtResource("3_tlwt5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.41192)
-spawn_line_direction = Vector3(1, 0, 0)
+[node name="BubbleSpawner" parent="." node_paths=PackedStringArray("center_point") instance=ExtResource("3_tlwt5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00353956)
+center_point = NodePath("../player")
 
 [node name="Camera3D" type="Camera3D" parent="."]

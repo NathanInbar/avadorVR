@@ -9,19 +9,22 @@ script/source = "extends Node3D
 # Inspector configurable properties
 @export var bubble_scene: PackedScene
 @export var spawn_timer_duration: float = 1.0
-@export var spawn_line_length: float = 10.0
-@export var spawn_line_direction: Vector3 = Vector3.FORWARD
-@export var random_rotation: bool = true
-@export var bubble_spawn_variation: Vector2 = Vector2(1.0, 1.0)  # X,Y variation perpendicular to line
+@export var spawn_radius: float = 5.0  # Radius of the spawn sphere
+@export var min_spawn_radius: float = 2.0  # Minimum distance from center
+@export var random_rotation_z: bool = true  # Allow random rotation around the facing axis
+@export var bubble_spawn_variation: float = 0.5  # Small random offset
+@export var debug_draw_enabled: bool = true
+@export var debug_sphere_color: Color = Color.AQUA
+@export var center_point: Node3D  # Optional reference to another node as center point
 
 # Private variables
 var _timer: Timer
 var _rng = RandomNumberGenerator.new()
+var _debug_mesh_instance: MeshInstance3D
 
 func _ready():
     # Initialize the random number generator
     _rng.randomize()
-    
     # Create and configure the timer
     _timer = Timer.new()
     _timer.wait_time = spawn_timer_duration
@@ -29,6 +32,51 @@ func _ready():
     _timer.autostart = true
     _timer.connect(\"timeout\", Callable(self, \"_on_timer_timeout\"))
     add_child(_timer)
+    
+    # Setup debug visualization
+    if debug_draw_enabled:
+        _setup_debug_visuals()
+
+func _setup_debug_visuals():
+    # Create a mesh for the spawn sphere visualization
+    var material = StandardMaterial3D.new()
+    material.albedo_color = debug_sphere_color
+    material.emission_enabled = true
+    material.emission = debug_sphere_color
+    material.emission_energy = 1.0
+    material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    material.albedo_color.a = 0.3
+    
+    # Create the mesh instance for outer sphere
+    _debug_mesh_instance = MeshInstance3D.new()
+    var sphere_mesh = SphereMesh.new()
+    sphere_mesh.radius = spawn_radius
+    sphere_mesh.height = spawn_radius * 2
+    sphere_mesh.radial_segments = 16
+    sphere_mesh.rings = 8
+    _debug_mesh_instance.mesh = sphere_mesh
+    _debug_mesh_instance.material_override = material
+    add_child(_debug_mesh_instance)
+    
+    # Create inner sphere if min_spawn_radius > 0
+    if min_spawn_radius > 0:
+        var inner_material = StandardMaterial3D.new()
+        inner_material.albedo_color = debug_sphere_color.darkened(0.5)
+        inner_material.emission_enabled = true
+        inner_material.emission = debug_sphere_color.darkened(0.5)
+        inner_material.emission_energy = 0.5
+        inner_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+        inner_material.albedo_color.a = 0.2
+        
+        var inner_mesh_instance = MeshInstance3D.new()
+        var inner_sphere_mesh = SphereMesh.new()
+        inner_sphere_mesh.radius = min_spawn_radius
+        inner_sphere_mesh.height = min_spawn_radius * 2
+        inner_sphere_mesh.radial_segments = 16
+        inner_sphere_mesh.rings = 8
+        inner_mesh_instance.mesh = inner_sphere_mesh
+        inner_mesh_instance.material_override = inner_material
+        add_child(inner_mesh_instance)
 
 func _on_timer_timeout():
     # Make sure we have a bubble scene assigned
@@ -36,15 +84,31 @@ func _on_timer_timeout():
         push_error(\"BubbleSpawner3D: No bubble scene assigned!\")
         return
     
-    # Calculate a random position along the line
-    var normalized_direction = spawn_line_direction.normalized()
+    # Generate a random point on a sphere
+    var random_point = _random_point_on_sphere()
+    var spawn_position = global_position + random_point
     
-    # Get a random position along the line
-    var random_distance = _rng.randf_range(0, spawn_line_length)
-    var random_position = global_position + normalized_direction * random_distance
-
     # Spawn the bubble
-    spawn_bubble(random_position)
+    spawn_bubble(spawn_position)
+
+func _random_point_on_sphere() -> Vector3:
+    # Generate random spherical coordinates
+    var theta = _rng.randf_range(0, TAU)  # Angle around Y axis
+    var phi = _rng.randf_range(0, PI)     # Angle from Y axis
+    
+    # Convert to Cartesian coordinates
+    var x = sin(phi) * cos(theta)
+    var y = sin(phi) * sin(theta)
+    var z = cos(phi)
+    
+    # Random radius between min and max
+    var radius = _rng.randf_range(min_spawn_radius, spawn_radius)
+    
+    # Add small random variation
+    var variation = _rng.randf_range(-bubble_spawn_variation, bubble_spawn_variation)
+    radius += variation
+    
+    return Vector3(x, y, z) * radius
 
 func spawn_bubble(position: Vector3):
     # Instance the bubble scene
@@ -53,13 +117,29 @@ func spawn_bubble(position: Vector3):
     # Set the bubble's position
     bubble_instance.global_position = position
     
-    # Optionally add random rotation
-    if random_rotation:
-        bubble_instance.rotation = Vector3(
-            _rng.randf_range(0, TAU),
-            _rng.randf_range(0, TAU),
-            _rng.randf_range(0, TAU)
-        )
+    # Make the bubble face the center point
+    var center_pos = global_position
+    if center_point != null:
+        center_pos = center_point.global_position
+    
+    # Calculate direction to center
+    var direction_to_center = center_pos - position
+    
+    # Make the bubble face the center
+    if direction_to_center.length() > 0.001:
+        # Look at the center, but maintain UP direction
+        bubble_instance.look_at(center_pos, Vector3.UP)
+        
+        # Apply random rotation around the facing axis (Z rotation) if enabled
+        if random_rotation_z:
+            var random_z_rotation = _rng.randf_range(0, TAU)
+            # Rotate around local Z axis
+            bubble_instance.rotate_object_local(Vector3.FORWARD, random_z_rotation)
+    
+    # If the bubble has a direction property, set it to point toward center
+    if bubble_instance.has_method(\"set\") and bubble_instance.get(\"direction\") != null:
+        # Set direction to go toward center (negative of facing direction)
+        bubble_instance.direction = direction_to_center.normalized()
     
     # Add the bubble to the scene
     get_tree().get_root().add_child(bubble_instance)
@@ -74,10 +154,19 @@ func set_spawning(enabled: bool):
         _timer.start()
     else:
         _timer.stop()
+
+# Show or hide debug visualization
+func set_debug_draw_enabled(value: bool):
+    debug_draw_enabled = value
+    if _debug_mesh_instance:
+        _debug_mesh_instance.visible = value
+
+# Spawn multiple bubbles at once
+func spawn_burst(count: int = 10):
+    for i in range(count):
+        spawn_bubble_now()
 "
 
 [node name="BubbleSpawner" type="Node3D"]
 script = SubResource("GDScript_m0053")
 bubble_scene = ExtResource("1_34eb8")
-spawn_line_length = 12.48
-random_rotation = false
